@@ -1,60 +1,35 @@
 # MS.RateLimiting
 
-> Estudo de rate limiting com ASP.NET Core e C#.
+Projeto de estudo sobre controle de requisições no ASP.NET Core 10. Os exemplos mostram como escolher algoritmos e particionar cotas por IP, identidade e plano de cliente.
 
-Este projeto explora formas de controlar a quantidade de requisições recebidas por uma API. A proposta é entender os algoritmos de limitação, como aplicar políticas no pipeline do ASP.NET Core e como separar limites por cliente ou identidade.
+## Cenários disponíveis
 
-## 🎯 Objetivos do estudo
+| Endpoint | Estratégia | Limite demonstrado |
+| --- | --- | --- |
+| `GET /demo/fixed` | Fixed window | 3 requisições a cada 5 s, com fila de 2 |
+| `GET /demo/ip` | Fixed window particionado | 5 requisições a cada 5 s por IP |
+| `GET /demo/usuario` | Token bucket particionado | Balde de 5 tokens, reposição de 10 a cada 5 s |
+| `GET /demo/plano` | Token bucket ou fixed window por plano | Enterprise: 5000 + 500/10 s; Pro: 1000 + 100/10 s; Gratuito: 60/min |
 
-- Entender o middleware de rate limiting do ASP.NET Core.
-- Comparar estratégias como janela fixa e token bucket.
-- Aplicar políticas globais e políticas específicas por endpoint.
-- Explorar partições por IP, usuário, API key e plano de assinatura.
-- Observar respostas `429 Too Many Requests` quando o limite é excedido.
+Todas as rotas também compartilham um limite global de 300 requisições por minuto por IP. Quando uma cota é excedida, a API responde com `429 Too Many Requests`.
 
-## 🧩 Conceitos explorados
+## Executar
 
-### Fixed window
-
-Permite um número definido de requisições por janela de tempo. Ao iniciar uma nova janela, a quantidade permitida é renovada.
-
-### Token bucket
-
-Cada requisição aceita consome um token. Os tokens são repostos ao longo do tempo até a capacidade máxima do balde, permitindo rajadas curtas de chamadas.
-
-### Particionamento
-
-Uma partição mantém um limite separado para cada chave escolhida, como o identificador de um usuário ou cliente. A chave deve vir de uma identidade validada pela aplicação.
-
-## 🛠 Tecnologias
-
-- C#
-- ASP.NET Core
-- Middleware de rate limiting
-
-## ▶️ Executando localmente
-
-Requisitos: .NET 10.
-
-No terminal, entre na pasta do projeto e execute:
+Requisitos: .NET 10 SDK.
 
 ```bash
 dotnet restore
 dotnet run
 ```
 
-Use o endereço informado no terminal para chamar a API. O projeto inclui um arquivo `.http`, abra-o no Visual Studio 2026 e use clique em **Send Request** para enviar as requisições de exemplo.
+Use o endereço informado no terminal. O arquivo `MS.RateLimiter.http` contém uma requisição para cada cenário. No exemplo por plano, use `123` para Enterprise, `456` para Pro ou `789` para Gratuito.
 
-## 🧪 Testando os limites
+## Observações
 
-Envie chamadas repetidas ao endpoint configurado com a política de rate limiting. As chamadas permitidas recebem a resposta normal do endpoint; quando o limite é excedido, a API pode responder com `429 Too Many Requests`, conforme a configuração.
+- As chaves são fictícias para estudo. Chaves desconhecidas compartilham a partição gratuita; o header sozinho não autentica o cliente.
+- Sem autenticação configurada, as chamadas ao exemplo por usuário compartilham a partição anônima. Com autenticação, `UseAuthentication` deve vir antes de `UseRateLimiter`.
+- O exemplo por IP usa o endereço remoto da conexão. Atrás de proxy, configure encaminhamento confiável antes de usar o endereço encaminhado.
+- O limiter guarda estado em memória no processo; instâncias diferentes mantêm contadores independentes.
+- Rate limiting na aplicação ajuda a controlar consumo, mas não substitui proteção de rede contra ataques distribuídos.
 
-Para observar diferenças entre usuários ou clientes, teste com identidades ou chaves válidas distintas. Chamadas sem identidade, se aceitas, podem compartilhar uma partição de fallback.
-
-## ⚠️ Observações
-
-- Um limitador em memória mantém o estado apenas no processo atual da aplicação. Múltiplas instâncias possuem estados separados.
-- Usar um header como `X-API-KEY` para escolher uma partição não valida a chave por si só; a aplicação precisa autenticar ou validar o cliente.
-- O rate limiter do ASP.NET Core é útil para controlar o tráfego da aplicação, mas não substitui proteção de rede contra ataques distribuídos.
-
-Este repositório tem finalidade de estudo. Os exemplos e políticas devem ser avaliados de acordo com a implementação e o ambiente de execução do projeto.
+Este repositório é didático. Os valores de limite e as chaves não são recomendações para produção.

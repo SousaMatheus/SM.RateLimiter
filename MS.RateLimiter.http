@@ -1,6 +1,18 @@
 @MS.RateLimiter_HostAddress = http://localhost:5041
 
-GET {{MS.RateLimiter_HostAddress}}/weatherforecast/
+### Janela fixa: 3 requisições a cada 5 segundos, fila de 2.
+GET {{MS.RateLimiter_HostAddress}}/demo/fixed
 Accept: application/json
 
-###
+### Limite particionado pelo IP remoto.
+GET {{MS.RateLimiter_HostAddress}}/demo/ip
+Accept: application/json
+
+### Token bucket particionado pela identidade autenticada.
+GET {{MS.RateLimiter_HostAddress}}/demo/usuario
+Accept: application/json
+
+### Partição e limite definidos pelo plano do cliente.
+GET {{MS.RateLimiter_HostAddress}}/demo/plano
+X-API-KEY: 123
+Accept: application/json
