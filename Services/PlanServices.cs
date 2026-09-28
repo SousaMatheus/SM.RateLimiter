@@ -16,6 +16,6 @@ public static class PlanServices
         "123" => new ClientePlano(ClienteEnterprise, PlanoEnum.Enterprise),
         "456" => new ClientePlano(ClientePro, PlanoEnum.Pro),
         "789" => new ClientePlano(ClienteGratuito, PlanoEnum.Gratuito),
-        _ => new ClientePlano(ClienteGratuito, PlanoEnum.Gratuito)
+        _ => new ClientePlano("cliente-anonimo", PlanoEnum.Gratuito)
     };
 }

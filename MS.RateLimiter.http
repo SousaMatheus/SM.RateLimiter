@@ -1,5 +1,8 @@
 @MS.RateLimiter_HostAddress = http://localhost:5041
 
+### Endpoint original de produtos; compartilha a política fixed com /demo/fixed.
+GET {{MS.RateLimiter_HostAddress}}/products
+
 ### Janela fixa: 3 requisições a cada 5 segundos, fila de 2.
 GET {{MS.RateLimiter_HostAddress}}/demo/fixed
 Accept: application/json
@@ -8,11 +11,11 @@ Accept: application/json
 GET {{MS.RateLimiter_HostAddress}}/demo/ip
 Accept: application/json
 
-### Token bucket particionado pela identidade autenticada.
+### Sem autenticação configurada, esta rota compartilha a cota anônima.
 GET {{MS.RateLimiter_HostAddress}}/demo/usuario
 Accept: application/json
 
-### Partição e limite definidos pelo plano do cliente.
+### Para testar planos sem o teto global: dotnet run -- --RateLimiting:GlobalEnabled=false
 GET {{MS.RateLimiter_HostAddress}}/demo/plano
 X-API-KEY: 123
 Accept: application/json

@@ -11,14 +11,17 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "ip-desconhecido",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 300,
-                Window = TimeSpan.FromMinutes(1)
-            }));
+    if(builder.Configuration.GetValue("RateLimiting:GlobalEnabled", true))
+    {
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "ip-desconhecido",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 300,
+                    Window = TimeSpan.FromMinutes(1)
+                }));
+    }
 
     options.AddFixedWindowLimiter("fixed", limiter =>
     {
@@ -93,13 +96,18 @@ if(app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRateLimiter();
 
+app.MapGet("/products", () => "product")
+    .RequireRateLimiting("fixed")
+    .WithName("products");
+
 app.MapGet("/demo/fixed", () => "fixed window")
     .RequireRateLimiting("fixed");
 
 app.MapGet("/demo/ip", () => "limite por IP")
     .RequireRateLimiting("por-ip");
 
-app.MapGet("/demo/usuario", () => "token bucket por usuário")
+app.MapGet("/demo/usuario", (HttpContext context) =>
+    $"Usuário: {context.User.Identity?.Name ?? "anônimo (cota compartilhada)"}")
     .RequireRateLimiting("por-usuario");
 
 app.MapGet("/demo/plano", (HttpContext context) =>
