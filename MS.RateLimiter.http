@@ -1,0 +1,6 @@
+@MS.RateLimiter_HostAddress = http://localhost:5041
+
+GET {{MS.RateLimiter_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
